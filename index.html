@@ -1,0 +1,343 @@
+<html >
+    <head>
+    <title>Forest Fires</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <style  rel='stylesheets' type="text/css" href="/style.css" ></style>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script src="//www.amcharts.com/lib/3/amcharts.js"></script>
+        <script src="//www.amcharts.com/lib/3/serial.js"></script>
+        <script src="//www.amcharts.com/lib/3/themes/light.js"></script>
+    </head>
+    <body style="background-color: black">
+            
+            <div id="cabecalho" style="margin-left:5%;border-style:solid;border-width:medium;border-radius:10px;width:1100px;height:auto;padding:50px;background-color: white">
+              <center><h2>Forest Fires</h2></center>
+               <div id="result"></div>
+               <h3 style="display:none;" id="box">Box Plot</h3> 
+               <div id="myDiv"></div>
+               <h3 style="display:none;" id="histogram">Histogram</h3> 
+               <div id="myDiv2"></div>
+
+            </div>
+
+    </body>
+
+    <script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery.csv.js"></script>
+    <script type="text/javascript"  src="js/randomforest.js"></script>
+    <script type="text/javascript" src="js/svm.js"></script>
+    <script type="text/javascript">
+      
+
+      var medians = [];
+      var outliers = [];
+      var standarddeviation = [];
+      var describes = [
+        'DC','DMC','FFMC','ISI','RH','X','Y'
+        ,'AREA','DAY','MONTH','RAIN','TEMP','WIND'
+      ];
+      //Variáveis de inicialização  
+      var data = []
+      var dataFormated = []
+      var attributes = []
+      var labels = []
+      //Opções do Random Forest
+      var options = {};
+      options.numTrees = 300; 
+      options.maxDepth = 15;
+      options.numTries = 10;
+      //Instanciando Random forest
+      var rforest = new forestjs.RandomForest()
+      //Instanciando Rede Neural
+      var svm = new svmjs.SVM()
+        
+      //Função principal  
+      function  main(){
+           //Formatação dos dados
+           loadCSV()  
+           objectToArray() 
+           getMedianByAttribute();
+           console.log(medians)
+           getOutliers();
+           console.log(outliers)
+           getStandardDeviation();
+           console.log(standarddeviation)
+           show();
+           createBoxPlot();
+           createHistogram();
+
+      }
+
+      //Obtendo os dados via ajax
+      function  loadCSV(){
+            $.ajax({
+                url:'doc/forestfires.csv',
+                async:false,
+                dataType:'text',
+                success:function(d){
+                    //Verificando se os dados existem.
+                    if(d){
+                        //Recebendo os dados convertido em objeto
+                        data = $.csv.toObjects(d);
+                        console.log(data)
+                    }else{
+                        //Se não existir dados mostrar essa mensagem no console
+                        console.log('File it is empty.')
+                    }
+                },
+                //Função será chamada caso ocorra algum erro ao tentar carregar o arquivo csv
+                error:function(){
+                    console.log('Erro in the try load the file csv.')
+                }
+
+            })
+      } 
+      //Função que converte objeto em array
+      function objectToArray(){
+          //Percorrendo todos os obejto e o transformando em array
+          for(var i = 0;i < Object.keys(data).length; i++){
+            
+              //Armazenando arrays
+              dataFormated.push(
+                [parseInt(data[i]['DC']),parseInt(data[i]['DMC']),parseInt(data[i]['FFMC']),parseInt(data[i]['ISI']),parseInt(data[i]['RH']),parseInt(data[i]['DC']),parseInt(data[i]['X']),parseInt(data[i]['Y']),parseInt(data[i]['area']),parseInt(convertDayByNumber(data[i]['day'])),parseInt(convertMonthByNumber(data[i]['month'])),parseInt(data[i]['rain']),parseInt(data[i]['wind']),parseInt(data[i]['temp'])
+                ])
+                
+          }
+      }
+
+      function median(values){
+         
+          values.sort( function(a,b) {return a - b;} );
+
+          var half = Math.floor(values.length/2);
+
+          if(values.length % 2)
+                return values[half];
+          else
+                return (values[half-1] + values[half]) / 2.0;
+
+      }
+
+
+      function convertDayByNumber(day){
+          switch(day){
+            case 'sun':
+              return 0;
+              break;
+            case 'mon':
+              return 1;  
+              break;
+            case 'tue':
+              return 2;
+              break;
+            case 'wed':
+              return 3;
+              break;
+            case 'thu':
+              return 4;
+              break;
+            case 'fri':
+              return 5;
+              break;
+            case 'sar':
+              return 6;
+              break;
+            default:
+              return -1;
+              break  
+          }
+      }
+
+      function convertMonthByNumber(month){
+            switch(month){
+              case 'jan':
+                return 0;
+                break;
+              case 'feb':
+                return 1;  
+                break;
+              case 'mar':
+                return 2;
+                break;  
+              case 'apr':
+                return 3;
+                break;
+              case 'may':
+                return 4;
+                break;
+              case 'jun':
+                return 5;
+                break;
+              case 'jul':
+                return 6;
+                break;
+              case 'aug':
+                return 7;
+                break;
+              case 'sep':
+                return 8;
+                break;
+              case 'oct':
+                return 9;
+                break;
+              case 'nov':
+                return 10;
+                break; 
+              case 'dec':
+                return 11;
+                break;       
+              default:
+                return -1;
+                break  
+            }
+      }
+
+      function getMedianByAttribute(){
+          var values = [];
+          for(var coluna = 0; coluna < 13; coluna++){
+
+              for(var linha = 0; linha < 517; linha++){
+                    values.push(dataFormated[linha][coluna]);
+
+              }
+
+              medians.push(median(values))
+              values = []
+          }
+
+      }
+
+      function getOutliers(){
+        var values = [];
+          for(var coluna = 0; coluna < 13; coluna++){
+
+              for(var linha = 0; linha < 517; linha++){
+                    values.push(dataFormated[linha][coluna]);
+
+              }
+
+              outliers.push(filterOutliers(values))
+              values = []
+          }
+      }
+
+     function filterOutliers(someArray) {
+          
+          if(someArray.length < 4)
+            return someArray;
+
+          let values, q1, q3, iqr, maxValue, minValue;
+
+          values = someArray.slice().sort( (a, b) => a - b);//copy array fast and sort
+
+          if((values.length / 4) % 1 === 0){//find quartiles
+            q1 = 1/2 * (values[(values.length / 4)] + values[(values.length / 4) + 1]);
+            q3 = 1/2 * (values[(values.length * (3 / 4))] + values[(values.length * (3 / 4)) + 1]);
+          } else {
+            q1 = values[Math.floor(values.length / 4 + 1)];
+            q3 = values[Math.ceil(values.length * (3 / 4) + 1)];
+          }
+
+          iqr = q3 - q1;
+          maxValue = q3 + iqr * 1.5;
+          minValue = q1 - iqr * 1.5;
+
+          return values.filter((x) => (x >= minValue) && (x <= maxValue));
+      }
+
+      function getStandardDeviation(){
+          var values = [];
+            for(var coluna = 0; coluna < 13; coluna++){
+
+                for(var linha = 0; linha < 517; linha++){
+                      values.push(dataFormated[linha][coluna]);
+
+                }
+
+                standarddeviation.push(standardDeviation(values))
+                values = []
+            }
+      }
+
+      function standardDeviation(list){
+          let average = list.reduce((total, value) => total+value/list.length, 0);
+          let variance = list.reduce((total, value) => total + Math.pow(average - value, 2)/list.length, 0);
+          return Math.sqrt(variance);
+      }
+
+      function show(){
+
+          $('#result').append('<h3>Medians</h3>');
+          for(i = 0; i < medians.length; i++){
+              $('#result').append('<li>'+medians[i]+'</li>');
+          }
+
+          $('#result').append('<h3>Outliers</h3>');
+          for(i = 0; i < outliers.length; i++){
+              $('#result').append('<li>'+outliers[i]+'</li>');
+          }
+
+          $('#result').append('<h3>Standard Deviation</h3>');
+          for(i = 0; i < standarddeviation.length; i++){
+              $('#result').append('<li>'+standarddeviation[i]+'</li>');
+          }
+      }
+
+      function createBoxPlot(){
+            var obj = {}
+            var data = [];
+            values = [];
+            for(var coluna = 0; coluna < 13; coluna++){
+
+                    for(var linha = 0; linha < 517; linha++){
+                          values.push(dataFormated[linha][coluna]);
+
+                    }
+
+                    obj = {
+                      y: values,
+                      type: 'box',
+                      name: describes[coluna]
+                    };
+                    data.push(obj)
+                    values = []
+                    obj = {}
+            }
+              console.log(data)
+              $('#box').show()
+              Plotly.newPlot('myDiv', data);
+      }
+
+      function createHistogram(){
+        var obj = {}
+            var data = [];
+            values = [];
+            for(var coluna = 0; coluna < 13; coluna++){
+
+                    for(var linha = 0; linha < 517; linha++){
+                          values.push(dataFormated[linha][coluna]);
+
+                    }
+
+                    obj = {
+                      x: values,
+                      type: 'histogram',
+                      name: describes[coluna]
+                    };
+                    data.push(obj)
+                    values = []
+                    obj = {}
+            }
+              console.log(data)
+              $('#histogram').show()
+              Plotly.newPlot('myDiv2', data);
+      }
+
+      //Chamando a função principal  
+      main() 
+
+    
+
+    </script>   
+
+ </html>
