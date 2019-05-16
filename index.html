@@ -7,6 +7,7 @@
         <script src="//www.amcharts.com/lib/3/amcharts.js"></script>
         <script src="//www.amcharts.com/lib/3/serial.js"></script>
         <script src="//www.amcharts.com/lib/3/themes/light.js"></script>
+        
     </head>
     <body style="background-color: black">
             
@@ -16,7 +17,17 @@
                <h3 style="display:none;" id="box">Box Plot</h3> 
                <div id="myDiv"></div>
                <h3 style="display:none;" id="histogram">Histogram</h3> 
-               <div id="myDiv2"></div>
+               <div id="myDiv2"></div><br>
+               <canvas id="myChart"></canvas>
+               <h3>PCA</h3>
+               <p style="float: right;">
+                <canvas id="canvas" width="400" height="400" style="width: 400px; height: 400px"></canvas>
+              </p>
+              <p>
+                <p>Computing: <span id="mode"></span></p>
+                Input: <pre id="matrix" style="height: 200px; overflow: auto;"></pre>
+                Output: <pre id="output" style="height: 200px; overflow: auto;"></pre>
+              </p>
 
             </div>
 
@@ -26,6 +37,8 @@
     <script type="text/javascript" src="js/jquery.csv.js"></script>
     <script type="text/javascript"  src="js/randomforest.js"></script>
     <script type="text/javascript" src="js/svm.js"></script>
+    <script type="text/javascript" src="js/mdsjs.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
     <script type="text/javascript">
       
 
@@ -36,6 +49,9 @@
         'DC','DMC','FFMC','ISI','RH','X','Y'
         ,'AREA','DAY','MONTH','RAIN','TEMP','WIND'
       ];
+    
+      var ctx = $('#myChart');
+
       //Variáveis de inicialização  
       var data = []
       var dataFormated = []
@@ -65,6 +81,8 @@
            show();
            createBoxPlot();
            createHistogram();
+           createScatter();
+           computePCA();
 
       }
 
@@ -297,7 +315,8 @@
                     obj = {
                       y: values,
                       type: 'box',
-                      name: describes[coluna]
+                      name: describes[coluna],
+                  
                     };
                     data.push(obj)
                     values = []
@@ -322,7 +341,11 @@
                     obj = {
                       x: values,
                       type: 'histogram',
-                      name: describes[coluna]
+                      name: describes[coluna],
+                      /*marker:{
+                        color: 'PINK'
+                      }*/
+
                     };
                     data.push(obj)
                     values = []
@@ -331,6 +354,71 @@
               console.log(data)
               $('#histogram').show()
               Plotly.newPlot('myDiv2', data);
+      }
+      var scatter = [];
+
+      function createScatter(){
+          for(var coluna = 12; coluna < 13; coluna++){
+
+              for(var linha = 0; linha < 517; linha++){
+                    scatter.push({x:dataFormated[linha][coluna],y:dataFormated[linha][coluna+1]});
+              }
+
+          }
+          
+          Chart.defaults.global.defaultFontColor = 'red';
+         
+          var scatterChart = new Chart(ctx, {
+                              type: 'scatter',
+                              data: {
+                                  datasets: [{
+                                      label: 'TEMP e WIND',
+                                      data: scatter
+                                  }]
+                              },
+                              options: {
+                                  scales: {
+                                      xAxes: [{
+                                          type: 'linear',
+                                          position: 'bottom'
+                                      }]
+                                  }
+                              },
+                              labels: ['Red', 'Blue', 'Purple', 'Yellow']
+                });
+      }
+
+      function computePCA() {
+
+      console.log(dataFormated)
+        var pos = mdsjs.convertToMatrix(dataFormated);
+        mdsjs.pcaAsync(pos, function(pca) {
+          var points = pos.mul(pca);
+          var ctx = document.getElementById("canvas").getContext("2d");
+          ctx.clearRect(0, 0, 400, 400);
+          ctx.beginPath();
+          ctx.rect(0, 0, 400, 400);
+          ctx.stroke();
+          ctx.save();
+          ctx.fillStyle = "blue";
+          pos.rowsIter(function(row) {
+            var x = row[0]+200
+            var y = row[1]+200
+            ctx.fillRect(x-2, y-2, 4, 4);
+          });
+          ctx.restore();
+          ctx.save();
+          ctx.fillStyle = "red";
+          points.rowsIter(function(row) {
+            var x = row[0]+200
+            var y = row[1]+200
+            ctx.fillRect(x-2, y-2, 4, 4);
+          });
+          ctx.restore();
+          document.getElementById("mode").innerText = "pca";
+          document.getElementById("output").innerText = pca + "\n" + points;
+          document.getElementById("matrix").innerText = "" + pos;
+        });
       }
 
       //Chamando a função principal  
