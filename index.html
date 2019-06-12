@@ -57,6 +57,7 @@
       var dataFormated = []
       var attributes = []
       var labels = []
+      var datadimension = []
       //Opções do Random Forest
       var options = {};
       options.numTrees = 300; 
@@ -83,7 +84,7 @@
            createHistogram();
            createScatter();
            computePCA();
-
+           dataDimension();
       }
 
       //Obtendo os dados via ajax
@@ -420,6 +421,32 @@
           document.getElementById("matrix").innerText = "" + pos;
         });
       }
+
+      function dataDimension(){
+
+        var value = []
+        for(var coluna = 0; coluna < 13; coluna++){
+         
+              for(var linha = 0; linha < 517; linha++){
+                 
+                      if(coluna == 1){
+                        value.push(dataFormated[linha][coluna]);
+                      }
+                      if(coluna == 4){
+                        value.push(dataFormated[linha][coluna]);
+                      }
+                      if(coluna == 5){
+                        value.push(dataFormated[linha][coluna]);
+                      }
+              }
+              if(value.length > 0){
+                datadimension.push(value)
+                value = []           
+              }     
+          }
+          console.log(datadimension)
+      }
+
 
       //Chamando a função principal  
       main() 
