@@ -59,6 +59,7 @@
       var labels = []
       var datadimension = []
       var pca = [];
+      var newLabels = [];
       //Opções do Random Forest
       var options = {};
       options.numTrees = 300; 
@@ -85,7 +86,9 @@
            createHistogram();
            createScatter();
            computePCA();
+           getLabel();
            dataDimension();
+           convertCSV(datadimension,newLabels[0],2);
       }
 
       //Obtendo os dados via ajax
@@ -99,7 +102,6 @@
                     if(d){
                         //Recebendo os dados convertido em objeto
                         data = $.csv.toObjects(d);
-                     
                     }else{
                         //Se não existir dados mostrar essa mensagem no console
                         console.log('File it is empty.')
@@ -437,8 +439,38 @@
          }
 
          pca.push([x,y])
-         console.log(pca)
+         //console.log(pca)
         
+      }
+
+      function getLabel(){  
+          values = [];
+          for(var coluna = 8; coluna < 9; coluna++){
+
+              for(var linha = 0; linha < 517; linha++){
+                    values.push(dataFormated[linha][coluna]);
+
+              }
+
+          }
+          newLabels.push(values)
+      }
+
+      function convertCSV(data,label,mode = 1){
+          csv = '';
+
+          if(mode == 1){
+          for(var i =0; i < 517; i++){
+            csv += data[0][i]+","+data[1][i]+","+label[i]+"\n"
+          }
+          }else{
+            console.log("aqui")
+            for(var j = 0; j < 517; j++){
+                csv += data[0][j]+","+data[1][j]+","+data[2][j]+","+data[3][j]+","+label[j]+"\n"
+            }
+          }
+
+          console.log(csv)
       }
 
       function dataDimension(){
@@ -466,7 +498,7 @@
                 value = []           
               }     
           }
-         
+         //console.log(datadimension[0])
       }
 
 

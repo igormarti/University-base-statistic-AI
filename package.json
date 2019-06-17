@@ -18,5 +18,10 @@
   "bugs": {
     "url": "https://github.com/igormarti/University-base-statistic-AI/issues"
   },
-  "homepage": "https://github.com/igormarti/University-base-statistic-AI#readme"
+  "homepage": "https://github.com/igormarti/University-base-statistic-AI#readme",
+  "dependencies": {
+    "brain": "^1.0.0",
+    "ml-cross-validation": "^1.2.0",
+    "ml-random-forest": "^1.0.3"
+  }
 }
