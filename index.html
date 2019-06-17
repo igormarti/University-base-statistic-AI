@@ -58,6 +58,7 @@
       var attributes = []
       var labels = []
       var datadimension = []
+      var pca = [];
       //Opções do Random Forest
       var options = {};
       options.numTrees = 300; 
@@ -74,11 +75,11 @@
            loadCSV()  
            objectToArray() 
            getMedianByAttribute();
-           console.log(medians)
+          
            getOutliers();
-           console.log(outliers)
+      
            getStandardDeviation();
-           console.log(standarddeviation)
+         
            show();
            createBoxPlot();
            createHistogram();
@@ -98,7 +99,7 @@
                     if(d){
                         //Recebendo os dados convertido em objeto
                         data = $.csv.toObjects(d);
-                        console.log(data)
+                     
                     }else{
                         //Se não existir dados mostrar essa mensagem no console
                         console.log('File it is empty.')
@@ -323,7 +324,7 @@
                     values = []
                     obj = {}
             }
-              console.log(data)
+             
               $('#box').show()
               Plotly.newPlot('myDiv', data);
       }
@@ -352,7 +353,7 @@
                     values = []
                     obj = {}
             }
-              console.log(data)
+             
               $('#histogram').show()
               Plotly.newPlot('myDiv2', data);
       }
@@ -390,8 +391,7 @@
       }
 
       function computePCA() {
-
-      console.log(dataFormated)
+      
         var pos = mdsjs.convertToMatrix(dataFormated);
         mdsjs.pcaAsync(pos, function(pca) {
           var points = pos.mul(pca);
@@ -414,12 +414,31 @@
             var x = row[0]+200
             var y = row[1]+200
             ctx.fillRect(x-2, y-2, 4, 4);
+
           });
-          ctx.restore();
+        
           document.getElementById("mode").innerText = "pca";
           document.getElementById("output").innerText = pca + "\n" + points;
           document.getElementById("matrix").innerText = "" + pos;
+          
         });
+         p = $('#output').text().split(" ")
+         var x = [];
+         var y = []
+         var change = true;
+         for(var i = 1; i < p.length; i++){
+            if(change){
+              change = false;
+              x.push(p[i])
+            }else{
+              change = true;
+              y.push(p[i])
+            }
+         }
+
+         pca.push([x,y])
+         console.log(pca)
+        
       }
 
       function dataDimension(){
@@ -447,7 +466,7 @@
                 value = []           
               }     
           }
-          console.log(datadimension)
+         
       }
 
 

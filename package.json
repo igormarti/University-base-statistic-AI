@@ -1,0 +1,22 @@
+{
+  "name": "ia",
+  "version": "1.0.0",
+  "description": "ia",
+  "main": "app.js",
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/igormarti/University-base-statistic-AI.git"
+  },
+  "author": "Igor",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/igormarti/University-base-statistic-AI/issues"
+  },
+  "homepage": "https://github.com/igormarti/University-base-statistic-AI#readme"
+}
